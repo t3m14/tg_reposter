@@ -15,7 +15,9 @@ __pyrogram__
 __asyncio__
 __random__
 
-<details><summary> # Отзыв о разработке  </summary>
+<details><summary> 
+  # Отзыв о разработке  
+</summary>
   
   
 ### Цели и задачи
