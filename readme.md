@@ -16,7 +16,7 @@ __asyncio__
 __random__
 
 <details><summary> 
-  # Отзыв о разработке  
+# Отзыв о разработке  
 </summary>
   
   
