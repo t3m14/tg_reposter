@@ -2,13 +2,13 @@
 import asyncio
 import os
 from pyrogram import Client, idle, filters
-from random import randint
+from random import randint, choices
 from config import *
 #Служебные глобальные переменные
 i = 0
 logins_list = []
 apps = []
-
+accounts_to_use = ""
 #Начинаем работу с составления списка сессий
 print("GETTING SESSIONS...")
 for root, dirs, files in os.walk("./"):
@@ -18,14 +18,18 @@ for root, dirs, files in os.walk("./"):
          
 print("STARTING...")
 async def main():
+    global accounts_to_use
+    accounts_to_use = round(len(logins_list)/100 * (50 - randint(1, 49)))
+    
     #Заполняем список приложений на основе списка сессий
     for login in logins_list:
         apps.append(Client(login, api_id, api_hash))
-       
+    
     for app in apps: #Асинхронно запускаем приложения по порядку
         print("SESSION OK")
         await app.start()
         
+    
         #Хэндлер который видит пост на первом канале, когда он выходит
         @app.on_message(filters.channel(channel1_link, "m"))
         async def get_post_and_put_to_queue(client, message):
@@ -42,24 +46,28 @@ async def main():
             
         #Асинхронная функция обработки поста
         async def channel_handler(message, queue):
-            #Используем try/except для непрерывной работы программы на случай непредвиденных ошибок
-            try:
-                #Получаем глобальную переменную для того чтобы число работающих аккаунтов было сгенерированно рандомно    
+            try:  
                 global i
-                #На рандоме из всех аккаунтов не срабатывает - каждый\каждый второй\каждый третий
-                if i % 3 +randint(-2, 0) == 0:
+                global accounts_to_use
+                
+                if message.entities or message.caption_entities :
+                    pass
+                else:
                     i += 1
-                    return
-                #Проверка на предмет присутствия дополнительного текста в виде ссылок, юзернеймов, текст-ссылок
-                if not message.entities:
-                        #Рандомная задержка между репостами для одного аккаунта
-                        await asyncio.sleep(randint(from_sleep, to_sleep))
-                        #Пересылаем сообщение в личку
-                        await message.forward(username_to_send)
-                        print("POST FORWARDED")
-                        #Заканчиваем задачу, чтобы освободить очередь
-                        queue.task_done()
-            except: pass
+                    if i >= len(logins_list):
+                        i = 0
+                        accounts_to_use = round(len(logins_list)/100 * (50 - randint(1, 49)))
+                    elif i <= accounts_to_use:
+                        return
+                    
+                    #Рандомная задержка между репостами для одного аккаунта
+                    await asyncio.sleep(randint(from_sleep, to_sleep))
+                    #Пересылаем сообщение в личку
+                    await message.forward(username_to_send)
+                    print("POST FORWARDED")
+                    #Заканчиваем задачу, чтобы освободить очередь
+            except: pass    
+    
     #Ожидание приложения до следующего сигнала
     await idle()
     #Закрываем все приложения, когда программа будет закрыта
